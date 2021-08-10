@@ -1,0 +1,187 @@
+﻿@model PagedList.IPagedList<English_Quiz.Models.Quiz>
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Thông tin đề";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<style>
+    .swal-wide {
+        width: 850px !important;
+    }
+</style>
+<h2>Danh sách đề</h2>
+
+<p style="margin-left:10px;">
+    <a class="btn btn-primary" href='@Url.Action("CreateQuizz","Quizz")'> Thêm mới</a>
+</p>
+@using (Html.BeginForm("Quizz", "Quizz", FormMethod.Post, new { @id = "quizTypeSubmit" }))
+{
+    <div class="form-group row">
+        <label class="control-label col-md-2" style="font-size:16px;">Loại đề </label>
+        <div class="col-md-4">
+            @Html.DropDownList("ddlQuizType", (SelectList)ViewBag.ddlQuizType, "--- Chọn loại đề ---", new { @class = "form-control", @name = "ddlQuizType", @onchange = "submitQuizType()" })
+        </div>
+    </div>
+}
+<table class="table">
+    <tr>
+        <th>
+            Mã đề
+        </th>
+        <th>
+            Tên đề
+        </th>
+        <th>
+            Thời gian (phút)
+        </th>
+        <th>
+            Mô tả
+        </th>
+        <th>
+            Loại đề
+        </th>
+        <th>
+            Đề test
+        </th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.QUIZ_ID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.QUIZ_NAME)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TIME)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DESCRIPTION)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Quiz_Type.QUIZ_TYPE_NAME)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IS_TEST)
+            </td>
+            <td>
+                <a href='@Url.Action("EditQuizz","Quizz", new{ QuizId = item.QUIZ_ID})' class="btn btn-info"><i class="fas fa-edit"></i></a>
+                |
+                <a href="javascript:void(0)" onclick="deleteQuiz('@item.QUIZ_ID')" class="btn btn-danger"><i class="far fa-trash-alt"></i></a>
+                |
+
+
+            </td>
+        </tr>
+    }
+
+</table>
+<br />
+Trang @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount
+
+@Html.PagedListPager(Model, page => Url.Action("Quizz", "Quizz",
+    new { page = page, ddlQuizType = ViewBag.quizType }))
+@section scripts{
+    <script type="text/javascript">
+        var data = [];
+        function submitQuizType() {
+            $("#quizTypeSubmit").submit();
+        }
+        const deleteQuiz = (id) => {
+            Swal.fire({
+                title: 'Bạn chắc chắn sẽ xóa?',
+                text: "Bạn sẽ không thể khôi phục bản ghi này!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Xóa!',
+                cancelButtonText: 'Đóng'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: `/Quizz/delete?id=${id}`,
+                        type: 'POST',
+                        success: function (data) {
+                            if (data.Success) {
+                               Swal.fire(
+                                    'Deleted!',
+                                   data.Message,
+                                    'success'
+                                )
+                                setTimeout(function () { location.reload(); }, 1500);
+
+                            }
+                            else {
+                              Swal.fire(
+                                  "Can't Delete",
+                                  data.Message,
+                                    'error'
+                                )
+                            }
+                        },
+                         error: function (error) {
+                             alert('Lỗi ajax' + error)
+                        },
+                        cache: false,
+                        processData: false,
+                        contentType: false
+                    });
+                }
+            })
+        }
+
+        const loadDataQuestionType = (id) =>{
+            $.post("/Quizz/getQuestionTypeByQuizId", {
+                id : id
+            }, function (e) {
+                    if (e) {
+                        data = e;
+                    }
+            $("#jsGrid").jsGrid({
+            width: "100%",
+            height: "400px",
+            autoload : true,
+            controller: {
+                insertItem: function (filter) {
+                    insertGrid(filter)
+                },
+                updateItem: function (filter) {
+                    updateGrid(filter)
+                },
+                deleteItem: function (filter) {
+                    deleteGrid(filter)
+                }
+            },
+            invalidMessage: "Lỗi",
+                noDataContent: "Không có dữ liệu",
+                data: data.Questions,
+            inserting: true,
+            editing: true,
+            sorting: true,
+            paging: true,
+            fields: [
+                {
+                    name: "TYPE_ID", type: "select", width: 150, items:data.QuestionTypes ,valueField:"TYPE_ID",textField:"TYPE_NAME", validate: {
+                        validator: "required",
+                        message: function (value, item) {
+                            return "Cần chọn loại câu hỏi";
+                        },
+                    }
+                },
+                { name: "LIST_ORDER", title: "Sắp xếp", type: "number", width: 25 },
+                { name: "TOTAL_QUESTION", type: "number", width: 20, title: "Số lượng câu hỏi" },
+                { type: "control" }
+            ]
+        });
+            },"json")
+
+        }
+        $(document).ready(function () {
+
+        })
+    </script>
+}
+

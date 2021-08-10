@@ -1,0 +1,67 @@
+﻿@model English_Quiz.Models.User
+@{
+    ViewBag.Title = "Đăng nhập";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+<section class="page-section bg-primary">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="panel panel-default">
+                <div class="panel-heading">Đăng nhập</div>
+                <div class="panel-body">
+                    @using (Html.BeginForm("UserLogin", "Take_Quiz", FormMethod.Post))
+                    {
+                        @Html.EditorFor(c => c.USER_NAME, new { htmlAttributes = new { @class = "form-control", @placeholder = "Tên đăng nhập", @style = "width:100%;" } })<br />
+                        @Html.EditorFor(c => c.PASSWORD, new { htmlAttributes = new { @class = "form-control", @placeholder = "Mật khẩu", @style = "width:100%;", @type = "password" } })<br />
+                        <a style="color:black" href="@Url.Action("UserRegister","Take_Quiz")">Chưa có tài khoản? Đăng ký ngay</a>
+                        <button type="submit" id="Enter" class="btn btn-light btn-xl js-scroll-trigger" style="width:100%;"><span class="glyphicon glyphicon-user"></span>   Đăng nhập</button>
+                    }
+                </div>
+                @if (ViewBag.Msg != null)
+                {
+                    <a style="display:none" onclick="message()" id="messageClick"></a>
+                    @*<div class="well well-sm well-danger"> @ViewBag.Msg </div>*@
+                }
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
+@section Scripts{
+    <script type="text/javascript">
+
+        const message = () => {
+            if (type == "success") {
+                var hostname = window.location.origin;
+                var login = "Take_Quiz/Index";
+            Swal.fire(
+                'Thành công',
+                '@ViewBag.msg',
+                'success'
+            )
+                setTimeout(function () { window.location.href = hostname + "/" + login; }, 1500);
+        }
+        else if (type == "false") {
+            Swal.fire(
+                'Thất bại',
+                '@ViewBag.msg',
+                'error'
+            )
+        }
+        else {
+            Swal.fire(
+                'Thất bại',
+                'Có lỗi trong việc tạo tài khoản, vui lòng thử lại !',
+                'error'
+            )
+        }
+        }
+        var type = "@ViewBag.type"
+        if (type != null) {
+            $("#messageClick").click();
+        }
+    </script>
+
+}
